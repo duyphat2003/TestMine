@@ -59,34 +59,6 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         amountText.text = gridProperties.amount.ToString();
     }
 
-    public bool AddItem(string name)
-    {
-        if(image.sprite && (name != gridProperties.name || gridProperties.amount >= 10))
-        {
-            return false;
-        }
-
-        if(!image.sprite)
-        {
-            Sprite sprite = nameSprites.FirstOrDefault(element => element.name == name);
-            GameObject prop = propPrefabs.FirstOrDefault(element => element.name == gridProperties.name);
-            gridProperties.name = name;
-            image.sprite = sprite;
-            prefabInstantiate = prop;
-        }
-
-        gridProperties.amount++;
-        return true;
-    }
-
-    public bool RemoveItem()
-    {
-        if(!image.sprite) return false;
-
-        gridProperties.amount--;
-        return true;
-    }
-
     public void OnBeginDrag(PointerEventData eventData)
     {
         mOriginalPanelLocalPosition = UIDragElement.localPosition;
@@ -223,7 +195,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             if (isSpaceFree) {
                 // Nếu không có đối tượng nào khác, thực hiện việc spawn
                 GameObject obj = Instantiate(prefabInstantiate, point, Quaternion.identity);
-                RemoveItem();
+                gridProperties.amount--;
                 Debug.Log("Spawned object at position: " + point);
             } else {
                 Debug.Log("Cannot spawn object, space is occupied.");
@@ -247,8 +219,23 @@ public enum DirectionHit
 }
 
 [System.Serializable]
-public class GridProperties
+public class GridProperties : System.IComparable<GridProperties>
 {
     public string name;
     public int amount;
+
+
+    public int CompareTo(GridProperties other)
+    {
+        return name.CompareTo(other.name);
+    }
+}
+
+public class GridPropertiesComparer : IComparer<GridProperties>
+{
+    public int Compare(GridProperties x, GridProperties y)
+    {
+        return x.name.CompareTo(y.name);
+    }
+    
 }
