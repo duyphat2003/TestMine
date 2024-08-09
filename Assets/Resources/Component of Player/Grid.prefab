@@ -93,8 +93,13 @@ MonoBehaviour:
   gridProperties:
     name: 
     amount: 0
-  image: {fileID: 0}
-  amountText: {fileID: 0}
+  image: {fileID: 2947592914997611185}
+  imageNull: {fileID: 21300000, guid: d5f27c5ceba823a46b38115b28740d59, type: 3}
+  amountText: {fileID: 8634917585401560163}
+  prefabInstantiate: {fileID: 0}
+  propPrefabs: []
+  UIDragElement: {fileID: 0}
+  Canvas: {fileID: 0}
 --- !u!1 &4859389188285345384
 GameObject:
   m_ObjectHideFlags: 0

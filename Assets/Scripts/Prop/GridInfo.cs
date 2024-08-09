@@ -79,7 +79,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         return true;
     }
 
-    public bool RemoveItem(string name)
+    public bool RemoveItem()
     {
         if(!image.sprite) return false;
 
@@ -130,22 +130,56 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         r.localPosition = targetPosition;
     }
 
+    [SerializeField] Camera cam;
     public void OnEndDrag(PointerEventData eventData)
     {
         StartCoroutine(Coroutine_MoveUIElement(UIDragElement, mOriginalPosition, 0.5f));
 
         RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(eventData.position);
+        Ray ray = cam.ScreenPointToRay(eventData.position);
 
         if (Physics.Raycast(ray, out hit, 1000.0f))
         {
-            Vector3 worldPoint = hit.point;
+            GameObject worldPoint = hit.collider.gameObject;
+            if(worldPoint.CompareTag("Object"))
+            {
+                float threshold = 0.5f;
 
-            CreateObject(worldPoint);
+                // Check the direction of the surface normal to determine the hit surface
+                if (Vector3.Dot(hit.normal, Vector3.up) > threshold) {
+                    directionHit = DirectionHit.TOP;
+                    Debug.Log("Hit top surface");
+                }
+                else if (Vector3.Dot(hit.normal, Vector3.down) > threshold) {
+                    directionHit = DirectionHit.BOTTOM;
+                    Debug.Log("Hit bottom surface");
+                }
+                else if (Vector3.Dot(hit.normal, Vector3.left) > threshold) {
+                    directionHit = DirectionHit.LEFT;
+                    Debug.Log("Hit left surface");
+                }
+                else if (Vector3.Dot(hit.normal, Vector3.right) > threshold) {
+                    directionHit = DirectionHit.RIGHT;
+                    Debug.Log("Hit right surface");
+                }
+                else if (Vector3.Dot(hit.normal, Vector3.forward) > threshold) {
+                    directionHit = DirectionHit.FRONT;
+                    Debug.Log("Hit front surface");
+                }
+                else if (Vector3.Dot(hit.normal, Vector3.back) > threshold) {
+                    directionHit = DirectionHit.BACK;
+                    Debug.Log("Hit back surface");
+                }
+            }
+
+            CreateObject(worldPoint, hit.point);
         }
     }
 
-    public void CreateObject(Vector3 position)
+    DirectionHit directionHit;
+    public float checkRadius = 1f;
+    public LayerMask layerMask;  
+    public void CreateObject(GameObject target, Vector3 point)
     {
         if (prefabInstantiate == null)
         {
@@ -153,17 +187,62 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         return;
         }
 
-        if (PositionWithinCell(position))
+        if (PositionWithinCell(target))
         {
-            GameObject obj = Instantiate(prefabInstantiate, position, Quaternion.identity);
+            if( target.CompareTag("Object"))
+            {
+                switch(directionHit)
+                {
+                    case DirectionHit.TOP:
+                    point += new Vector3(0,1,0);
+                    break;
+
+                    case DirectionHit.BOTTOM:
+                    point -= new Vector3(0,1,0);
+                    break;
+
+                    case DirectionHit.LEFT:
+                    point -= new Vector3(1,0,0);
+                    break;
+
+                    case DirectionHit.RIGHT:
+                    point += new Vector3(1,0,0);
+                    break;
+                    
+                    case DirectionHit.FRONT:
+                    point += new Vector3(0,0,1);
+                    break;
+
+                    case DirectionHit.BACK:
+                    point -= new Vector3(0,0,1);
+                    break;
+                }
+            }
+            bool isSpaceFree = !Physics.CheckSphere(point, checkRadius, layerMask);
+
+            if (isSpaceFree) {
+                // Nếu không có đối tượng nào khác, thực hiện việc spawn
+                GameObject obj = Instantiate(prefabInstantiate, point, Quaternion.identity);
+                Debug.Log("Spawned object at position: " + point);
+            } else {
+                Debug.Log("Cannot spawn object, space is occupied.");
+            }
+            
+            RemoveItem();
         }
     }
 
-    private bool PositionWithinCell(Vector3 pos)
-    {
-        // Placeholder logic: Always return true. Implement your own logic here.
-        return true;
-    }
+    private bool PositionWithinCell(GameObject target) => target.CompareTag("Ground") || target.CompareTag("Object");
+}
+
+public enum DirectionHit
+{
+    TOP,
+    BOTTOM,
+    LEFT,
+    RIGHT,
+    FRONT,
+    BACK,
 }
 
 [System.Serializable]
