@@ -172,7 +172,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
                 }
             }
 
-            CreateObject(worldPoint, hit.point);
+            CreateObject(worldPoint, hit.point + Vector3.up * 0.5f);
         }
     }
 
@@ -223,12 +223,13 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             if (isSpaceFree) {
                 // Nếu không có đối tượng nào khác, thực hiện việc spawn
                 GameObject obj = Instantiate(prefabInstantiate, point, Quaternion.identity);
+                RemoveItem();
                 Debug.Log("Spawned object at position: " + point);
             } else {
                 Debug.Log("Cannot spawn object, space is occupied.");
             }
             
-            RemoveItem();
+            
         }
     }
 
