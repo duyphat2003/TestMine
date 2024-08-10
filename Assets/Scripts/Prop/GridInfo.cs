@@ -12,7 +12,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 {
     public GridProperties gridProperties;
     [SerializeField] Image image; 
-    [SerializeField] Sprite imageNull; 
+    [SerializeField] Sprite imageNull; // Khi không có item nào
     [SerializeField] TextMeshProUGUI amountText;
 
     [SerializeField] GameObject prefabInstantiate;
@@ -188,7 +188,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         Debug.Log("No prefab to instantiate");
         return;
         }
-
+        // Xác định vị trí của chuỗi trên vật thể
         if (PositionWithinCell(target))
         {
             if( target.CompareTag("Object"))
@@ -220,6 +220,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
                     break;
                 }
             }
+            // Xác định xung quang trống hay không
             bool isSpaceFree = !Physics.CheckSphere(point, checkRadius, layerMask);
 
             if (isSpaceFree) {
@@ -251,7 +252,8 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
                 PlayerPref_DatabaseManager.Instance.props.Add(prop);
                 gridProperties.amount--;
 
-
+                Instantiate(vfxPrefab, obj.transform.position, Quaternion.identity);
+                placeSound.Play();
                 Debug.Log("Spawned object at position: " + point);
             } else {
                 Debug.Log("Cannot spawn object, space is occupied.");
@@ -261,6 +263,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         }
     }
     [SerializeField] AudioSource placeSound;
+    [SerializeField] GameObject vfxPrefab;
     public float scaleSpeed = 2.0f; // Tốc độ phóng to
     private Vector3 targetScale = new Vector3(1, 1, 1);
     int FindMaxIndex(List<Prop> list)
@@ -273,6 +276,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     private bool PositionWithinCell(GameObject target) => target.CompareTag("Ground") || target.CompareTag("Object");
 }
 
+// Xác định vị trí của chuỗi trên vật thể
 public enum DirectionHit
 {
     TOP,

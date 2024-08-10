@@ -63,7 +63,6 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        stepTimer = stepInterval;
         if(PlayerPref_DatabaseManager.Instance.hasDataPlayer)
         {
             transform.SetPositionAndRotation(new Vector3(PlayerPref_DatabaseManager.Instance.player.x, PlayerPref_DatabaseManager.Instance.player.y, PlayerPref_DatabaseManager.Instance.player.z), 
@@ -85,6 +84,10 @@ public class PlayerController : MonoBehaviour
         SetEdit();
         IntertactObject();
         Movement();
+        if(isMove)
+            flySource.Play();
+        else
+            flySource.Stop();
         UpdatePosition();
     }
 
@@ -116,7 +119,8 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
-    [SerializeField] AudioSource removeSound;
+    [SerializeField] AudioSource removeSource;
+    [SerializeField] GameObject vfxPrefab;
     GameObject worldPoint;
     bool isRotate;
     void IntertactObject()
@@ -139,6 +143,8 @@ public class PlayerController : MonoBehaviour
                 Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.name);
                 PlayerPref_DatabaseManager.Instance.props.Remove(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop);
                 PlayerPref_DatabaseManager.Instance.DeleteProp(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.index);
+                removeSource.Play();
+                Instantiate(vfxPrefab, hitInfo.collider.gameObject.transform.position, Quaternion.identity);
                 Destroy(hitInfo.collider.gameObject);
             }        
         }
@@ -262,39 +268,14 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public AudioSource audioSource;
-    public AudioClip footstepSound; // Âm thanh bước chân
-    public AudioClip rotateSound;
-    public float stepInterval = 0.5f; // Khoảng thời gian giữa các bước chân
-    public float rotateThreshold = 0.1f; // Ngưỡng để xác định khi nào phát âm thanh quay
-    private Vector3 lastRotation; // Lưu trữ hướng quay trước đó
-    private float stepTimer;
-    void SoundMovement()
+    public AudioSource flySource;
+    public AudioSource impactSource;
+    public AudioClip flySound; // Âm thanh bước chân
+    public AudioClip impactSound;
+
+    void OnCollisionEnter(Collision other)
     {
-        // Kiểm tra xem nhân vật có đang di chuyển không
-        if (characterController.isGrounded && characterController.velocity.magnitude > 0.1f)
-        {
-            stepTimer -= Time.deltaTime;
-
-            if (stepTimer <= 0f)
-            {
-                // Phát âm thanh bước chân
-                audioSource.PlayOneShot(footstepSound);
-                stepTimer = stepInterval; // Đặt lại thời gian giữa các bước chân
-            }
-        }
-        else
-        {
-            // Đặt lại bộ đếm thời gian khi nhân vật dừng di chuyển
-            stepTimer = stepInterval;
-        }
-
-         // Âm thanh quay
-        Vector3 currentRotation = transform.eulerAngles;
-        if (Vector3.Distance(currentRotation, lastRotation) > rotateThreshold)
-        {
-            audioSource.PlayOneShot(rotateSound);
-            lastRotation = currentRotation; // Cập nhật hướng quay hiện tại
-        }
+        if(other.gameObject.CompareTag("Ground") || other.gameObject.CompareTag("Object"))
+        impactSource.Play();
     }
 }

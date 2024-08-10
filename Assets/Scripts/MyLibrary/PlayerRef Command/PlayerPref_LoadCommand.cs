@@ -13,6 +13,9 @@ namespace MyLibrary.PlayerPref_Command
             this.filePath = filePath;
         }
 
+        /// <summary>
+        /// Tải dữ liệu lên
+        /// </summary>
         public void Execute()
         {
             if (File.Exists(filePath))

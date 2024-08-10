@@ -13,7 +13,9 @@ namespace MyLibrary.PlayerPref_Command
             this.filePath = filePath;
             this.content = content;
         }
-
+        /// <summary>
+        /// Lưu dữ liệu
+        /// </summary>
         public void Execute()
         {
             File.WriteAllText(filePath, content);
