@@ -225,6 +225,15 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             if (isSpaceFree) {
                 // Nếu không có đối tượng nào khác, thực hiện việc spawn
                 GameObject obj = Instantiate(prefabInstantiate, point, Quaternion.identity);
+                obj.transform.localScale = Vector3.zero;
+                
+                // Phóng to Cube từ (0,0,0) đến (1,1,1) mượt mà
+                while (obj.transform.localScale != targetScale)
+                {
+                    obj.GetComponent<Rigidbody>().isKinematic = obj.transform.localScale != targetScale;
+                    obj.transform.localScale = Vector3.Lerp(obj.transform.localScale, targetScale, scaleSpeed * Time.deltaTime);
+                }
+                obj.GetComponent<Rigidbody>().isKinematic = obj.transform.localScale != targetScale;
                 int index = PlayerPref_DatabaseManager.Instance.props.Count() <= 0 ? 0 : FindMaxIndex(PlayerPref_DatabaseManager.Instance.props);
                 
                 Prop prop = new()
@@ -241,6 +250,8 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
                 obj.GetComponent<PropInfo>().prop = prop;
                 PlayerPref_DatabaseManager.Instance.props.Add(prop);
                 gridProperties.amount--;
+
+
                 Debug.Log("Spawned object at position: " + point);
             } else {
                 Debug.Log("Cannot spawn object, space is occupied.");
@@ -249,6 +260,9 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             
         }
     }
+    [SerializeField] AudioSource placeSound;
+    public float scaleSpeed = 2.0f; // Tốc độ phóng to
+    private Vector3 targetScale = new Vector3(1, 1, 1);
     int FindMaxIndex(List<Prop> list)
     {
         list = list.OrderBy(p => p.index).ToList();

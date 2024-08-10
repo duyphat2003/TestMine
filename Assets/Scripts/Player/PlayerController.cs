@@ -63,6 +63,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        stepTimer = stepInterval;
         if(PlayerPref_DatabaseManager.Instance.hasDataPlayer)
         {
             transform.SetPositionAndRotation(new Vector3(PlayerPref_DatabaseManager.Instance.player.x, PlayerPref_DatabaseManager.Instance.player.y, PlayerPref_DatabaseManager.Instance.player.z), 
@@ -115,6 +116,7 @@ public class PlayerController : MonoBehaviour
             }
         }
     }
+    [SerializeField] AudioSource removeSound;
     GameObject worldPoint;
     bool isRotate;
     void IntertactObject()
@@ -257,6 +259,42 @@ public class PlayerController : MonoBehaviour
         if(pauseStatus)
         {
             WaitingForSaving();
+        }
+    }
+
+    public AudioSource audioSource;
+    public AudioClip footstepSound; // Âm thanh bước chân
+    public AudioClip rotateSound;
+    public float stepInterval = 0.5f; // Khoảng thời gian giữa các bước chân
+    public float rotateThreshold = 0.1f; // Ngưỡng để xác định khi nào phát âm thanh quay
+    private Vector3 lastRotation; // Lưu trữ hướng quay trước đó
+    private float stepTimer;
+    void SoundMovement()
+    {
+        // Kiểm tra xem nhân vật có đang di chuyển không
+        if (characterController.isGrounded && characterController.velocity.magnitude > 0.1f)
+        {
+            stepTimer -= Time.deltaTime;
+
+            if (stepTimer <= 0f)
+            {
+                // Phát âm thanh bước chân
+                audioSource.PlayOneShot(footstepSound);
+                stepTimer = stepInterval; // Đặt lại thời gian giữa các bước chân
+            }
+        }
+        else
+        {
+            // Đặt lại bộ đếm thời gian khi nhân vật dừng di chuyển
+            stepTimer = stepInterval;
+        }
+
+         // Âm thanh quay
+        Vector3 currentRotation = transform.eulerAngles;
+        if (Vector3.Distance(currentRotation, lastRotation) > rotateThreshold)
+        {
+            audioSource.PlayOneShot(rotateSound);
+            lastRotation = currentRotation; // Cập nhật hướng quay hiện tại
         }
     }
 }
