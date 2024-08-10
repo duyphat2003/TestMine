@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MyLibrary.Model;
 using MyLibrary.PlayerFacade;
 using UnityEngine;
@@ -13,8 +14,47 @@ public class PlayerController : MonoBehaviour
     SpectatorCameraFacade spectatorCameraFacade;
     [SerializeField] SpectatorCameraProperties spectatorCameraProperties;
     
-    [SerializeField] List<GridInfo> gridInfos;
     CharacterController characterController;
+
+    [SerializeField] GameObject menu;
+    
+    void OpenMenu()
+    {
+        isEdit = true;
+        menu.SetActive(true);
+    }
+
+    public void CloseMenu()
+    {
+        isEdit = false;
+        menu.SetActive(false);
+    }
+
+    public void ExitGame()
+    {
+        WaitingForSaving();
+        Debug.Log("Quit");
+        Application.Quit();
+    }
+
+    void WaitingForSaving()
+    {
+        Debug.Log("Reset Data");
+        PlayerPref_DatabaseManager.Instance.ResetContent();
+        Debug.Log("Done Reset Data");
+
+        Debug.Log("Saving Inventory");
+        PlayerPref_DatabaseManager.Instance.SaveInventory();
+        Debug.Log("Done Inventory");
+
+        Debug.Log("Saving Player");
+        PlayerPref_DatabaseManager.Instance.SavePlayer();
+        Debug.Log("Done Player");
+
+        Debug.Log("Saving Prop");
+        PlayerPref_DatabaseManager.Instance.SaveProp();
+        Debug.Log("Done Prop");
+    }
 
     void Awake()
     {
@@ -23,17 +63,10 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        Player player = PlayerPref_DatabaseManager.Instance.LoadPlayer();
-        transform.SetPositionAndRotation(new Vector3(player.x, player.y, player.z), Quaternion.Euler(player.a, player.b, player.c));
-        
-        gridInfos = GetComponentsInChildren<GridInfo>().ToList();
-        List<Inventory> inventory = PlayerPref_DatabaseManager.Instance.LoadInventory();
-        
-        for (int i = 0; i < gridInfos.Count(); i++)
+        if(PlayerPref_DatabaseManager.Instance.hasDataPlayer)
         {
-            Inventory item = inventory.FirstOrDefault(x => x.index == i);
-            gridInfos[i].gridProperties.name = item != null ? item.name : "";
-            gridInfos[i].gridProperties.amount = item != null ? item.amount : 0;
+            transform.SetPositionAndRotation(new Vector3(PlayerPref_DatabaseManager.Instance.player.x, PlayerPref_DatabaseManager.Instance.player.y, PlayerPref_DatabaseManager.Instance.player.z), 
+                                Quaternion.Euler(PlayerPref_DatabaseManager.Instance.player.a, PlayerPref_DatabaseManager.Instance.player.b, PlayerPref_DatabaseManager.Instance.player.c));
         }
 
         Cursor.lockState = isEdit ? CursorLockMode.None : CursorLockMode.Locked;
@@ -51,6 +84,17 @@ public class PlayerController : MonoBehaviour
         SetEdit();
         IntertactObject();
         Movement();
+        UpdatePosition();
+    }
+
+    void UpdatePosition()
+    {
+        PlayerPref_DatabaseManager.Instance.player.x = transform.position.x;
+        PlayerPref_DatabaseManager.Instance.player.y = transform.position.y;
+        PlayerPref_DatabaseManager.Instance.player.z = transform.position.z;
+        PlayerPref_DatabaseManager.Instance.player.a = transform.rotation.x;
+        PlayerPref_DatabaseManager.Instance.player.b = transform.rotation.y;
+        PlayerPref_DatabaseManager.Instance.player.c = transform.rotation.z;
     }
 
     void SetEdit()
@@ -62,9 +106,13 @@ public class PlayerController : MonoBehaviour
         mousePosition = cam.ScreenToWorldPoint(mousePosition);
         Debug.DrawRay(cam.transform.position, mousePosition - cam.transform.position, Color.blue);
 
-        if(MyCustomKeyboard.KEY_R)
+        if(MyCustomKeyboard.KEY_R || MyCustomKeyboard.KEY_ESC)
         {
             isEdit = !isEdit;
+            if(MyCustomKeyboard.KEY_ESC)
+            {
+                OpenMenu();
+            }
         }
     }
     GameObject worldPoint;
@@ -86,7 +134,7 @@ public class PlayerController : MonoBehaviour
             if(Physics.Raycast(ray, out RaycastHit hitInfo, rangePick, itemMask, QueryTriggerInteraction.Ignore))
             {
                 spectatorCameraFacade.ConstructRestoreObject(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
-                Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
+                Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().propName);
                 Destroy(hitInfo.collider.gameObject);
             }        
         }
@@ -185,5 +233,28 @@ public class PlayerController : MonoBehaviour
         
         characterController.Move(isMove ? direction.Item1 : stopMove);
         transform.eulerAngles = !isEdit ? direction.Item2 : currentRotate;
+    }
+
+
+    void OnDestroy()
+    {
+        WaitingForSaving();
+    }
+
+    void OnApplicationQuit()
+    {
+        WaitingForSaving();
+    }
+
+    void OnDisable()
+    {
+        WaitingForSaving();
+    }
+
+    private void OnApplicationPause(bool pauseStatus) {
+        if(pauseStatus)
+        {
+            WaitingForSaving();
+        }
     }
 }

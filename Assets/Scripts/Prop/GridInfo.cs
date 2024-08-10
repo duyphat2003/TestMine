@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MyLibrary.Model;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
@@ -29,6 +30,25 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     // Start is called before the first frame update
     void Start()
     {
+        if(PlayerPref_DatabaseManager.Instance.hasDataInventory)
+        {
+            int index = PlayerPref_DatabaseManager.Instance.inventory.FindIndex(x => x.index == gridProperties.index);
+            gridProperties.name = PlayerPref_DatabaseManager.Instance.inventory[index].name; 
+            gridProperties.amount = PlayerPref_DatabaseManager.Instance.inventory[index].amount; 
+        }
+        else
+        {
+            gridProperties.name = "";
+            gridProperties.amount = 0;
+
+            Inventory inventory = new Inventory();
+            inventory.name = gridProperties.name;
+            inventory.amount = gridProperties.amount;
+            inventory.index = gridProperties.index;
+
+            PlayerPref_DatabaseManager.Instance.inventory.Add(inventory);
+        }
+
         mOriginalPosition = UIDragElement.localPosition;
         nameSprites = Resources.LoadAll<Sprite>("PropSprite").ToList();
         propPrefabs = Resources.LoadAll<GameObject>("Props").ToList();
@@ -59,6 +79,9 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             prefabInstantiate = null;
         }
         amountText.text = gridProperties.amount.ToString();
+        int index = PlayerPref_DatabaseManager.Instance.inventory.FindIndex(x => x.index == gridProperties.index);
+        PlayerPref_DatabaseManager.Instance.inventory[index].name = gridProperties.name; 
+        PlayerPref_DatabaseManager.Instance.inventory[index].amount = gridProperties.amount; 
     }
 
     GameObject clone;
@@ -205,7 +228,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             if (isSpaceFree) {
                 // Nếu không có đối tượng nào khác, thực hiện việc spawn
                 GameObject obj = Instantiate(prefabInstantiate, point, Quaternion.identity);
-                obj.GetComponent<PropInfo>().name = gridProperties.name;
+                obj.GetComponent<PropInfo>().propName = gridProperties.name;
                 gridProperties.amount--;
                 Debug.Log("Spawned object at position: " + point);
                 Destroy(clone);
@@ -235,6 +258,7 @@ public class GridProperties : System.IComparable<GridProperties>
 {
     public string name;
     public int amount;
+    public int index;
 
 
     public int CompareTo(GridProperties other)

@@ -9,8 +9,7 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
 {
     public static PlayerPref_DatabaseManager Instance;
     PlayerRef_CommandManager playerRef_CommandManager;
-
-    
+    [SerializeField] GameObject playerPrefab;    
     void Start()
     {
         if(Instance)
@@ -20,32 +19,82 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
 
         playerRef_CommandManager = new PlayerRef_CommandManager();
         DontDestroyOnLoad(gameObject);
+
+        props = new List<Prop>();
+        inventory = new List<Inventory>();
+        player = new Player();
+
+        hasDataProp = true;
+        hasDataInventory = true;
+        hasDataPlayer = true;
+
+        LoadInventory();
+        LoadProp();
+        LoadPlayer();
+        
+
+        if(hasDataPlayer)
+        {
+            Instantiate(playerPrefab, new Vector3(player.x, player.y, player.z), Quaternion.Euler(player.a, player.b, player.c));
+        }
+        else
+        {
+            Instantiate(playerPrefab, transform.position, Quaternion.identity);
+        }
+        
+        if(PlayerPref_DatabaseManager.Instance.hasDataProp)
+        {
+            foreach(var prop in PlayerPref_DatabaseManager.Instance.props)
+            {
+                GameObject prefab = Resources.Load<GameObject>($"Props/{prop.name}");
+                GameObject clone = Instantiate(prefab, new Vector3(prop.x, prop.y, prop.z), Quaternion.Euler(prop.a, prop.b, prop.c));
+                clone.GetComponent<PropInfo>().name = prop.name;
+                clone.GetComponent<PropInfo>().index = prop.index;
+                clone.GetComponent<PropInfo>().hasData = true;
+            }
+        }
     }
 
-    public void SaveProp(Prop prop)
+    public List<Prop> props;
+    public List<Inventory> inventory;
+    public Player player;
+    public bool hasDataProp;
+    public bool hasDataInventory;
+    public bool hasDataPlayer;
+    public void SaveProp()
     {
-        // Lấy tất cả các tệp và sắp xếp chúng
-        string[] sortedFilePaths = GetSortedFilePaths(Application.persistentDataPath + "/Prop");
-
-        // Tạo tên tệp mới và lưu tệp mới với tên không trùng
-        string uniqueFileName = GenerateUniqueFileName(Application.persistentDataPath + "/Prop", prop.name, ".txt");
-        string newFilePath = Path.Combine(Application.persistentDataPath + "/Prop", uniqueFileName);
-   
-        IPlayerPrefCommand savePropCommand = new PlayerPref_SaveCommand(newFilePath, prop.Serialize());
-        playerRef_CommandManager.ExecuteCommand(savePropCommand);
+        foreach(Prop prop in props)
+        {
+            if (!Directory.Exists(Application.persistentDataPath + "/Prop"))
+            {
+                Directory.CreateDirectory(Application.persistentDataPath + "/Prop");
+            }
+            IPlayerPrefCommand savePropCommand = new PlayerPref_SaveCommand(Application.persistentDataPath + $"/Prop/{prop.index}.txt", prop.Serialize());
+            playerRef_CommandManager.ExecuteCommand(savePropCommand);
+        }
     }
 
-    public void SaveInventory(Inventory[] inventory)
+    public void SaveInventory()
     {
+         string directoryPath = Application.persistentDataPath + "/Inventory";
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
         foreach(Inventory item in inventory)
         {
-            IPlayerPrefCommand saveItemCommand = new PlayerPref_SaveCommand(Application.persistentDataPath + $"/Inventory/{item.index}", item.Serialize());
+            IPlayerPrefCommand saveItemCommand = new PlayerPref_SaveCommand(Application.persistentDataPath + $"/Inventory/{item.index}.txt", item.Serialize());
             playerRef_CommandManager.ExecuteCommand(saveItemCommand);
         }
     }
 
-    public void SavePlayer(Player player)
+    public void SavePlayer()
     {
+        string directoryPath = Application.persistentDataPath + "/Player";
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
         string playerPath = Application.persistentDataPath + "/Player/Player.txt";
         IPlayerPrefCommand savePlayerCommand = new PlayerPref_SaveCommand(playerPath, player.Serialize());
         playerRef_CommandManager.ExecuteCommand(savePlayerCommand);
@@ -71,91 +120,85 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
         return filePaths;
     }
 
-    public List<Prop> LoadProp()
+    public void LoadProp()
     {
-        List<Prop> props= new List<Prop>();
-        // Lấy tất cả các tệp từ thư mục và in ra tên tệp
-        List<string> filePaths = GetAllFiles(Application.persistentDataPath + "/Prop");
+        string propDirectory = Application.persistentDataPath + "/Prop";
         
-        foreach (string filePath in filePaths)
+        // Kiểm tra xem thư mục có tồn tại và có tệp không
+        if (Directory.Exists(propDirectory) && Directory.GetFiles(propDirectory).Length > 0)
         {
-            // Tải dữ liệu Prop
-            IPlayerPrefCommand loadPropCommand = new PlayerPref_LoadCommand(filePath);
-            playerRef_CommandManager.ExecuteCommand(loadPropCommand);
-            Prop loadedProp = Prop.Deserialize(((PlayerPref_LoadCommand)loadPropCommand).GetLoadedContent());
-            Debug.Log($"Loaded Prop Position: {loadedProp.name}, {loadedProp.x}, {loadedProp.y}, {loadedProp.z}");
-            Debug.Log($"File found: {filePath}");
-            props.Add(loadedProp);
-        }
+            List<string> filePaths = GetAllFiles(propDirectory);
 
-        return props;
-    }
-
-    public List<Inventory> LoadInventory()
-    {
-        List<Inventory> inventory = new List<Inventory>();
-        // Lấy tất cả các tệp từ thư mục và in ra tên tệp
-        List<string> filePaths = GetAllFiles(Application.persistentDataPath + "/Inventory");
-        
-        foreach (string filePath in filePaths)
-        {
-            // Tải dữ liệu Prop
-            IPlayerPrefCommand loadPropCommand = new PlayerPref_LoadCommand(filePath);
-            playerRef_CommandManager.ExecuteCommand(loadPropCommand);
-            Inventory item = Inventory.Deserialize(((PlayerPref_LoadCommand)loadPropCommand).GetLoadedContent());
-            Debug.Log($"Loaded Prop Position: {item.name}, {item.index}, {item.amount}");
-            Debug.Log($"File found: {filePath}");
-            inventory.Add(item);
-        }
-        return inventory;
-    }
-
-    public Player LoadPlayer()
-    {
-        // Tải dữ liệu Player
-        IPlayerPrefCommand loadPlayerCommand = new PlayerPref_LoadCommand(Application.persistentDataPath + "/Player/Player.txt");
-        playerRef_CommandManager.ExecuteCommand(loadPlayerCommand);
-        Player loadedPlayer = Player.Deserialize(((PlayerPref_LoadCommand)loadPlayerCommand).GetLoadedContent());
-        Debug.Log($"Loaded Player Position: {loadedPlayer.x}, {loadedPlayer.y}, {loadedPlayer.z}, {loadedPlayer.a}, {loadedPlayer.b}, {loadedPlayer.c}");
-        return loadedPlayer;
-    }
-
-
-
-    string[] GetSortedFilePaths(string directoryPath)
-    {
-        if (Directory.Exists(directoryPath))
-        {
-            string[] filePaths = Directory.GetFiles(directoryPath);
-            System.Array.Sort(filePaths, (x, y) => string.Compare(Path.GetFileName(x), Path.GetFileName(y)));
-            return filePaths;
+            foreach (string filePath in filePaths)
+            {
+                // Tải dữ liệu Prop
+                IPlayerPrefCommand loadPropCommand = new PlayerPref_LoadCommand(filePath);
+                playerRef_CommandManager.ExecuteCommand(loadPropCommand);
+                Prop loadedProp = Prop.Deserialize(((PlayerPref_LoadCommand)loadPropCommand).GetLoadedContent());
+                Debug.Log($"Loaded Prop Position: {loadedProp.name}, {loadedProp.index}, {loadedProp.x}, {loadedProp.y}, {loadedProp.z}, {loadedProp.a}, {loadedProp.b}, {loadedProp.c}");
+                Debug.Log($"File found: {filePath}");
+                props.Add(loadedProp);
+            }
         }
         else
         {
-            Debug.LogWarning($"Directory does not exist: {directoryPath}");
-            return new string[0];
+            Debug.LogWarning("No Prop data files found.");
+            hasDataProp = false;
         }
     }
 
-    string GenerateUniqueFileName(string directoryPath, string baseFileName, string extension)
+    public void LoadInventory()
     {
-        // Lấy tất cả tên tệp hiện có
-        string[] existingFileNames = Directory.GetFiles(directoryPath)
-                                              .Select(file => Path.GetFileNameWithoutExtension(file))
-                                              .ToArray();
+        string inventoryDirectory = Application.persistentDataPath + "/Inventory";
 
-        string fileName = baseFileName;
-        string filePath = Path.Combine(directoryPath, fileName + extension);
-        int count = 1;
-
-        // Nếu tên tệp đã tồn tại, thêm số vào tên tệp mới
-        while (existingFileNames.Contains(fileName))
+        // Kiểm tra xem thư mục có tồn tại và có tệp không
+        if (Directory.Exists(inventoryDirectory) && Directory.GetFiles(inventoryDirectory).Length > 0)
         {
-            fileName = $"{baseFileName}_{count}";
-            filePath = Path.Combine(directoryPath, fileName + extension);
-            count++;
-        }
+            List<string> filePaths = GetAllFiles(inventoryDirectory);
 
-        return fileName + extension;
+            foreach (string filePath in filePaths)
+            {
+                // Tải dữ liệu Inventory
+                IPlayerPrefCommand loadInventoryCommand = new PlayerPref_LoadCommand(filePath);
+                playerRef_CommandManager.ExecuteCommand(loadInventoryCommand);
+                Inventory item = Inventory.Deserialize(((PlayerPref_LoadCommand)loadInventoryCommand).GetLoadedContent());
+                Debug.Log($"Loaded Inventory Item: {item.name}, {item.index}, {item.amount}");
+                Debug.Log($"File found: {filePath}");
+                inventory.Add(item);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("No Inventory data files found.");
+            hasDataInventory = false;
+        }
     }
+
+    public void LoadPlayer()
+    {
+        string playerFilePath = Application.persistentDataPath + "/Player/Player.txt";
+
+        // Kiểm tra xem tệp Player có tồn tại không
+        if (File.Exists(playerFilePath))
+        {
+            // Tải dữ liệu Player
+            IPlayerPrefCommand loadPlayerCommand = new PlayerPref_LoadCommand(playerFilePath);
+            playerRef_CommandManager.ExecuteCommand(loadPlayerCommand);
+            player = Player.Deserialize(((PlayerPref_LoadCommand)loadPlayerCommand).GetLoadedContent());
+            Debug.Log($"Loaded Player Position: {player.x}, {player.y}, {player.z}, {player.a}, {player.b}, {player.c}");
+        }
+        else
+        {
+            Debug.LogWarning("Player data file not found.");
+            hasDataPlayer = false;
+        }
+    }
+
+
+    public void ResetContent()
+    {
+        playerRef_CommandManager.UndoLastCommand();
+    }
+
+
 }
