@@ -34,15 +34,7 @@ namespace MyLibrary.PlayerPref_Command
 
         public void Undo()
         {
-            if (!string.IsNullOrEmpty(previousContent))
-            {
-                loadedContent = previousContent;
-                Debug.Log($"Reverted to previous content.");
-            }
-            else
-            {
-                Debug.LogWarning("No previous content to revert to.");
-            }
+ 
         }
     }
 }

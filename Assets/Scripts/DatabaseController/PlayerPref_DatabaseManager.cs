@@ -42,15 +42,13 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
             Instantiate(playerPrefab, transform.position, Quaternion.identity);
         }
         
-        if(PlayerPref_DatabaseManager.Instance.hasDataProp)
+        if(hasDataProp)
         {
-            foreach(var prop in PlayerPref_DatabaseManager.Instance.props)
+            foreach(var prop in props)
             {
                 GameObject prefab = Resources.Load<GameObject>($"Props/{prop.name}");
                 GameObject clone = Instantiate(prefab, new Vector3(prop.x, prop.y, prop.z), Quaternion.Euler(prop.a, prop.b, prop.c));
-                clone.GetComponent<PropInfo>().name = prop.name;
-                clone.GetComponent<PropInfo>().index = prop.index;
-                clone.GetComponent<PropInfo>().hasData = true;
+                clone.GetComponent<PropInfo>().prop = prop;
             }
         }
     }
@@ -63,15 +61,20 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
     public bool hasDataPlayer;
     public void SaveProp()
     {
+        if (!Directory.Exists(Application.persistentDataPath + "/Prop"))
+        {
+            Directory.CreateDirectory(Application.persistentDataPath + "/Prop");
+        }
         foreach(Prop prop in props)
         {
-            if (!Directory.Exists(Application.persistentDataPath + "/Prop"))
-            {
-                Directory.CreateDirectory(Application.persistentDataPath + "/Prop");
-            }
             IPlayerPrefCommand savePropCommand = new PlayerPref_SaveCommand(Application.persistentDataPath + $"/Prop/{prop.index}.txt", prop.Serialize());
             playerRef_CommandManager.ExecuteCommand(savePropCommand);
         }
+    }
+
+    public void DeleteProp(int index)
+    {
+        File.Delete(Application.persistentDataPath + $"/Prop/{index}.txt");
     }
 
     public void SaveInventory()

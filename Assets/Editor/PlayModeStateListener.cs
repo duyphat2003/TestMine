@@ -18,7 +18,7 @@ public static class PlayModeStateListener
         }
         else if (state == PlayModeStateChange.ExitingPlayMode)
         {
-            PlayerPref_DatabaseManager.Instance.ResetContent();
+            
             PlayerPref_DatabaseManager.Instance.SaveInventory();
             PlayerPref_DatabaseManager.Instance.SaveProp();
             PlayerPref_DatabaseManager.Instance.SavePlayer();
@@ -30,7 +30,7 @@ public static class PlayModeStateListener
         }
         else if (state == PlayModeStateChange.ExitingEditMode)
         {
-            PlayerPref_DatabaseManager.Instance.ResetContent();
+            
             PlayerPref_DatabaseManager.Instance.SaveInventory();
             PlayerPref_DatabaseManager.Instance.SaveProp();
             PlayerPref_DatabaseManager.Instance.SavePlayer();

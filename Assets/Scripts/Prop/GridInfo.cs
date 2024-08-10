@@ -84,12 +84,10 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         PlayerPref_DatabaseManager.Instance.inventory[index].amount = gridProperties.amount; 
     }
 
-    GameObject clone;
     public void OnBeginDrag(PointerEventData eventData)
     {
         if(string.IsNullOrEmpty(gridProperties.name)) return;
         GetComponentInParent<PlayerController>().isDrag = true;
-        clone = Instantiate(prop, eventData.position, Quaternion.identity);
         mOriginalPanelLocalPosition = UIDragElement.localPosition;
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -114,7 +112,6 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             Vector3 offsetToOriginal = localPointerPosition - mOriginalLocalPointerPosition;
 
             UIDragElement.localPosition = mOriginalPanelLocalPosition + offsetToOriginal;
-            clone.transform.position = eventData.position;
         }
     }
 
@@ -228,16 +225,35 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             if (isSpaceFree) {
                 // Nếu không có đối tượng nào khác, thực hiện việc spawn
                 GameObject obj = Instantiate(prefabInstantiate, point, Quaternion.identity);
-                obj.GetComponent<PropInfo>().propName = gridProperties.name;
+                int index = PlayerPref_DatabaseManager.Instance.props.Count() <= 0 ? 0 : FindMaxIndex(PlayerPref_DatabaseManager.Instance.props);
+                
+                Prop prop = new()
+                {
+                    name = gridProperties.name,
+                    index = index,
+                    x = transform.position.x,
+                    y = transform.position.y,
+                    z = transform.position.z,
+                    a = transform.rotation.x,
+                    b = transform.rotation.y,
+                    c = transform.rotation.z
+                };
+                obj.GetComponent<PropInfo>().prop = prop;
+                PlayerPref_DatabaseManager.Instance.props.Add(prop);
                 gridProperties.amount--;
                 Debug.Log("Spawned object at position: " + point);
-                Destroy(clone);
             } else {
                 Debug.Log("Cannot spawn object, space is occupied.");
             }
             
             
         }
+    }
+    int FindMaxIndex(List<Prop> list)
+    {
+        list = list.OrderBy(p => p.index).ToList();
+
+        return list.Max(p => p.index) + 1;
     }
 
     private bool PositionWithinCell(GameObject target) => target.CompareTag("Ground") || target.CompareTag("Object");

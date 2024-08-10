@@ -40,7 +40,7 @@ public class PlayerController : MonoBehaviour
     void WaitingForSaving()
     {
         Debug.Log("Reset Data");
-        PlayerPref_DatabaseManager.Instance.ResetContent();
+        
         Debug.Log("Done Reset Data");
 
         Debug.Log("Saving Inventory");
@@ -133,8 +133,10 @@ public class PlayerController : MonoBehaviour
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             if(Physics.Raycast(ray, out RaycastHit hitInfo, rangePick, itemMask, QueryTriggerInteraction.Ignore))
             {
-                spectatorCameraFacade.ConstructRestoreObject(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
-                Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().propName);
+                spectatorCameraFacade.ConstructRestoreObject(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.name);
+                Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.name);
+                PlayerPref_DatabaseManager.Instance.props.Remove(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop);
+                PlayerPref_DatabaseManager.Instance.DeleteProp(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.index);
                 Destroy(hitInfo.collider.gameObject);
             }        
         }
