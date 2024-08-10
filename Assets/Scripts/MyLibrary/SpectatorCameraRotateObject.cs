@@ -19,13 +19,24 @@ namespace MyLibrary
                 case RotateDirection.UP:
                 directionRotate =  Quaternion.AngleAxis(spectatorCameraRotateObjectProperties.rotationSpeedY * Time.deltaTime, Vector3.up);
                 break;
+
+                case RotateDirection.DOWN:
+                directionRotate =  Quaternion.AngleAxis(spectatorCameraRotateObjectProperties.rotationSpeedY * Time.deltaTime, -Vector3.up);
+                break;
                 
                 case RotateDirection.RIGHT:
                 directionRotate =  Quaternion.AngleAxis(spectatorCameraRotateObjectProperties.rotationSpeedX * Time.deltaTime, Vector3.right);
                 break;
+                case RotateDirection.LEFT:
+                directionRotate =  Quaternion.AngleAxis(spectatorCameraRotateObjectProperties.rotationSpeedX * Time.deltaTime, -Vector3.right);
+                break;
 
                 case RotateDirection.FORWARD:
                 directionRotate =  Quaternion.AngleAxis(spectatorCameraRotateObjectProperties.rotationSpeedZ * Time.deltaTime, Vector3.forward);
+                break;
+                
+                case RotateDirection.BACKWARD:
+                directionRotate =  Quaternion.AngleAxis(spectatorCameraRotateObjectProperties.rotationSpeedZ * Time.deltaTime, -Vector3.forward);
                 break;
             }
             return directionRotate;
@@ -45,8 +56,11 @@ namespace MyLibrary
 
     public enum RotateDirection
     {
-        UP,
+        FORWARD,
+        BACKWARD,
+        LEFT,
         RIGHT,
-        FORWARD
+        UP,
+        DOWN
     }
 }

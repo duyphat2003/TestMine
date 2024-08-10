@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace MyLibrary
+{
     public class SpectatorCameraMovement
     {
         SpectatorCameraMovementProperties spectatorCameraMovementProperties;
@@ -41,11 +43,11 @@ using UnityEngine;
                 break;
 
                 case DirectionMovement.UP:
-                direction = -directMovement.up;
+                direction = directMovement.up;
                 break;
 
                 case DirectionMovement.DOWN:
-                direction = directMovement.up;
+                direction = -directMovement.up;
                 break;
             }
             return new System.Tuple<Vector3, Vector3>(moveSpeedCurrent * Time.deltaTime * direction, playerEulerAngles);
@@ -72,3 +74,5 @@ using UnityEngine;
         public float lookSpeed = 2.0f;          // Speed of mouse look
         [HideInInspector] public DirectionMovement direction;   // Speed of mouse look
     }
+}
+    

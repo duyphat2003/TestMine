@@ -5,66 +5,58 @@ using UnityEngine;
 namespace MyLibrary
 {
     public class SpectatorCameraRestoreObject
-{
-    SpectatorCameraRestoreObjectProperties spectatorCameraRestoreObjectProperties;
-
-    public SpectatorCameraRestoreObject(SpectatorCameraRestoreObjectProperties spectatorCameraRestoreObjectProperties)
     {
-        this.spectatorCameraRestoreObjectProperties = spectatorCameraRestoreObjectProperties;
-    }
+        SpectatorCameraRestoreObjectProperties spectatorCameraRestoreObjectProperties;
 
-    public string ConstructRestoreObject(string name)
-    {
-        spectatorCameraRestoreObjectProperties.gridPropertiesList = spectatorCameraRestoreObjectProperties.gridPropertiesList.OrderBy(item => item.name).ToList();
-        GridProperties gridProperties = FindByName(name);
-        if(gridProperties == null)
+        public SpectatorCameraRestoreObject(SpectatorCameraRestoreObjectProperties spectatorCameraRestoreObjectProperties)
         {
-            return FindGrid(name);
+            this.spectatorCameraRestoreObjectProperties = spectatorCameraRestoreObjectProperties;
         }
-        else
+
+        public string ConstructRestoreObject(string name)
         {
-            if(gridProperties.amount >= 10)
+            spectatorCameraRestoreObjectProperties.gridInfos = spectatorCameraRestoreObjectProperties.gridInfos.OrderBy(item => item.gridProperties.name).ToList();
+            // Tìm kiếm phần tử có tên tương ứng
+            GridInfo gridInfo = FindByName(name);
+            if (gridInfo == null)
             {
                 return FindGrid(name);
             }
+            else
+            {
+                // Kiểm tra số lượng và xử lý
+                if (gridInfo.gridProperties.amount >= 10)
+                {
+                    return FindGrid(name);
+                }
 
-            gridProperties.amount++;
-            
+                gridInfo.gridProperties.amount++;
+            }
+
+            return "Got it!";
         }
-        return "Got it!";
-    }
 
-    string FindGrid(string name)
+    private string FindGrid(string name)
     {
-        var firstInvalidItem = spectatorCameraRestoreObjectProperties.gridPropertiesList.FirstOrDefault(item => string.IsNullOrEmpty(item.name));
+        // Tìm phần tử đầu tiên có GridProperties với name rỗng hoặc null
+        var firstInvalidItem = spectatorCameraRestoreObjectProperties.gridInfos.FirstOrDefault(item => string.IsNullOrEmpty(item.gridProperties.name));
 
         if (firstInvalidItem == null)
             return "Ooops! There are no more empty cells.";
 
-        firstInvalidItem.name = name;
-        firstInvalidItem.amount++;
+        // Cập nhật tên và tăng số lượng
+        firstInvalidItem.gridProperties.name = name;
+        firstInvalidItem.gridProperties.amount++;
         return "Luckily there is still a slot left.";
     }
 
-    public GridProperties FindByName(string name)
-    {
-        // Tìm kiếm bằng tìm kiếm nhị phân
-        int index = spectatorCameraRestoreObjectProperties.gridPropertiesList.BinarySearch(new GridProperties { name = name }, new GridPropertiesComparer());
-        if (index >= 0)
-        {
-            return spectatorCameraRestoreObjectProperties.gridPropertiesList[index];
-        }
-        else
-        {
-            return null; // Hoặc xử lý khi không tìm thấy
-        }
+        public GridInfo FindByName(string name) => spectatorCameraRestoreObjectProperties.gridInfos.FirstOrDefault(item => item.gridProperties.name == name);
     }
-}
 
-[System.Serializable]
-public class SpectatorCameraRestoreObjectProperties
-{
-    public List<GridProperties> gridPropertiesList; 
-}
+    [System.Serializable]
+    public class SpectatorCameraRestoreObjectProperties
+    {
+        public List<GridInfo> gridInfos; 
+    }
 }
 

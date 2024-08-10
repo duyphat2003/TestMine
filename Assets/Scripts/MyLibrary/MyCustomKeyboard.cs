@@ -10,7 +10,8 @@ namespace MyLibrary
         public static bool KEY_A => Input.GetKey(KeyCode.A);
         public static bool KEY_Q => Input.GetKey(KeyCode.Q);
         public static bool KEY_E => Input.GetKey(KeyCode.E);
-        public static bool MOUSE_L => Input.GetKeyDown(KeyCode.Mouse0);
+        public static bool KEY_LSHIFT => Input.GetKey(KeyCode.LeftShift);
+        public static bool MOUSE_L => Input.GetKey(KeyCode.Mouse0);
         public static bool MOUSE_R => Input.GetKeyDown(KeyCode.Mouse1);
         public static bool MOUSE_M => Input.GetKeyDown(KeyCode.Mouse2);
         public static bool KEY_R => Input.GetKeyDown(KeyCode.R);

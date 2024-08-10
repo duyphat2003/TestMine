@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7872821935878255445}
   - component: {fileID: 670503345204619296}
   - component: {fileID: 4069116700921926600}
+  - component: {fileID: -385052195826985098}
   m_Layer: 6
   m_Name: Green Cube
   m_TagString: Object
@@ -133,3 +134,16 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 1
+--- !u!114 &-385052195826985098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5857103266591543640}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e86fcf2fe9192645963a011ecc03c99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  name: 

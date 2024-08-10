@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7916587732215862314}
   - component: {fileID: 8503691401905266533}
   - component: {fileID: 3470326083362248936}
+  - component: {fileID: -4373667303339561212}
   m_Layer: 6
   m_Name: Red Cube
   m_TagString: Object
@@ -133,3 +134,16 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 1
+--- !u!114 &-4373667303339561212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3741675203770700801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e86fcf2fe9192645963a011ecc03c99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  name: 

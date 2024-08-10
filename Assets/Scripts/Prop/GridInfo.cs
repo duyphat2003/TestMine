@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -22,7 +23,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     private Vector2 mOriginalLocalPointerPosition;
     private Vector3 mOriginalPanelLocalPosition;
     private Vector2 mOriginalPosition;
-
+    GameObject prop;
     List<Sprite> nameSprites;
 
     // Start is called before the first frame update
@@ -33,12 +34,13 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         propPrefabs = Resources.LoadAll<GameObject>("Props").ToList();
 
         Sprite sprite = nameSprites.FirstOrDefault(element => element.name == gridProperties.name);
-        GameObject prop = propPrefabs.FirstOrDefault(element => element.name == gridProperties.name);
+        prop = propPrefabs.FirstOrDefault(element => element.name == gridProperties.name);
         
         if(gridProperties.amount == 0)
         {
             image.sprite = imageNull;
             amountText.text = "0";
+            gridProperties.name = "";
         }
         else
         {
@@ -59,8 +61,11 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         amountText.text = gridProperties.amount.ToString();
     }
 
+    GameObject clone;
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if(string.IsNullOrEmpty(gridProperties.name)) return;
+        clone = Instantiate(prop, eventData.position, Quaternion.identity);
         mOriginalPanelLocalPosition = UIDragElement.localPosition;
 
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -72,6 +77,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
     public void OnDrag(PointerEventData eventData)
     {
+        if(string.IsNullOrEmpty(gridProperties.name)) return;
         Vector2 localPointerPosition;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             Canvas,
@@ -80,9 +86,10 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             out localPointerPosition))
         {
 
-        Vector3 offsetToOriginal = localPointerPosition - mOriginalLocalPointerPosition;
+            Vector3 offsetToOriginal = localPointerPosition - mOriginalLocalPointerPosition;
 
-        UIDragElement.localPosition = mOriginalPanelLocalPosition + offsetToOriginal;
+            UIDragElement.localPosition = mOriginalPanelLocalPosition + offsetToOriginal;
+            clone.transform.position = eventData.position;
         }
     }
 
@@ -195,8 +202,10 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             if (isSpaceFree) {
                 // Nếu không có đối tượng nào khác, thực hiện việc spawn
                 GameObject obj = Instantiate(prefabInstantiate, point, Quaternion.identity);
+                obj.GetComponent<PropInfo>().name = gridProperties.name;
                 gridProperties.amount--;
                 Debug.Log("Spawned object at position: " + point);
+                Destroy(clone);
             } else {
                 Debug.Log("Cannot spawn object, space is occupied.");
             }
