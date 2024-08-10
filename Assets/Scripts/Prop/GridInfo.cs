@@ -38,8 +38,13 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         }
         else
         {
-            gridProperties.name = "";
-            gridProperties.amount = 0;
+            if(gridProperties.index == 0)
+                gridProperties.name = "Green Cube";
+            else if(gridProperties.index == 1)
+                gridProperties.name = "Blue Cube";
+            else if(gridProperties.index == 2)
+                gridProperties.name = "Red Cube";
+            gridProperties.amount = 10;
 
             Inventory inventory = new Inventory();
             inventory.name = gridProperties.name;

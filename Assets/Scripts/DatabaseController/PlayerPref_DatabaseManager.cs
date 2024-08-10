@@ -24,9 +24,9 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
         inventory = new List<Inventory>();
         player = new Player();
 
-        hasDataProp = true;
-        hasDataInventory = true;
-        hasDataPlayer = true;
+        hasDataProp = false;
+        hasDataInventory = false;
+        hasDataPlayer = false;
 
         LoadInventory();
         LoadProp();
@@ -142,6 +142,7 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
                 Debug.Log($"File found: {filePath}");
                 props.Add(loadedProp);
             }
+            hasDataProp = true;
         }
         else
         {
@@ -169,6 +170,7 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
                 Debug.Log($"File found: {filePath}");
                 inventory.Add(item);
             }
+            hasDataInventory = true;
         }
         else
         {
@@ -189,6 +191,7 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
             playerRef_CommandManager.ExecuteCommand(loadPlayerCommand);
             player = Player.Deserialize(((PlayerPref_LoadCommand)loadPlayerCommand).GetLoadedContent());
             Debug.Log($"Loaded Player Position: {player.x}, {player.y}, {player.z}, {player.a}, {player.b}, {player.c}");
+            hasDataPlayer = true;
         }
         else
         {
