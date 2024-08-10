@@ -65,6 +65,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     public void OnBeginDrag(PointerEventData eventData)
     {
         if(string.IsNullOrEmpty(gridProperties.name)) return;
+        GetComponentInParent<PlayerController>().isDrag = true;
         clone = Instantiate(prop, eventData.position, Quaternion.identity);
         mOriginalPanelLocalPosition = UIDragElement.localPosition;
 
@@ -78,6 +79,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     public void OnDrag(PointerEventData eventData)
     {
         if(string.IsNullOrEmpty(gridProperties.name)) return;
+        GetComponentInParent<PlayerController>().isDrag = true;
         Vector2 localPointerPosition;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             Canvas,
@@ -153,6 +155,7 @@ public class GridInfo : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
             CreateObject(worldPoint, hit.point + Vector3.up * 0.5f);
         }
+        GetComponentInParent<PlayerController>().isDrag = false;
     }
 
     DirectionHit directionHit;

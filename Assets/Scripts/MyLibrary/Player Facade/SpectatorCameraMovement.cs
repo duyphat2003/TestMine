@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace MyLibrary
+namespace MyLibrary.PlayerFacade
 {
     public class SpectatorCameraMovement
     {

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace MyLibrary
+namespace MyLibrary.PlayerFacade
 {
     public class SpectatorCameraRestoreObject
     {

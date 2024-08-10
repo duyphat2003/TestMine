@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using MyLibrary;
+using MyLibrary.Model;
+using MyLibrary.PlayerFacade;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -12,7 +13,7 @@ public class PlayerController : MonoBehaviour
     SpectatorCameraFacade spectatorCameraFacade;
     [SerializeField] SpectatorCameraProperties spectatorCameraProperties;
     
-
+    [SerializeField] List<GridInfo> gridInfos;
     CharacterController characterController;
 
     void Awake()
@@ -22,6 +23,19 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        Player player = PlayerPref_DatabaseManager.Instance.LoadPlayer();
+        transform.SetPositionAndRotation(new Vector3(player.x, player.y, player.z), Quaternion.Euler(player.a, player.b, player.c));
+        
+        gridInfos = GetComponentsInChildren<GridInfo>().ToList();
+        List<Inventory> inventory = PlayerPref_DatabaseManager.Instance.LoadInventory();
+        
+        for (int i = 0; i < gridInfos.Count(); i++)
+        {
+            Inventory item = inventory.FirstOrDefault(x => x.index == i);
+            gridInfos[i].gridProperties.name = item != null ? item.name : "";
+            gridInfos[i].gridProperties.amount = item != null ? item.amount : 0;
+        }
+
         Cursor.lockState = isEdit ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = isEdit;
         spectatorCameraFacade = new SpectatorCameraFacade(spectatorCameraProperties);
@@ -30,8 +44,16 @@ public class PlayerController : MonoBehaviour
     }
     bool isMove;
     bool isEdit;
+    public bool isDrag;
     Vector3 currentRotate;
     void Update()
+    {
+        SetEdit();
+        IntertactObject();
+        Movement();
+    }
+
+    void SetEdit()
     {
         Cursor.lockState = isEdit ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = isEdit;
@@ -44,63 +66,77 @@ public class PlayerController : MonoBehaviour
         {
             isEdit = !isEdit;
         }
+    }
+    GameObject worldPoint;
+    bool isRotate;
+    void IntertactObject()
+    {
+        if(!isEdit)
+            return;
 
-        if(isEdit)
+        if(worldPoint != null && !isRotate)
         {
-            if(MyCustomKeyboard.MOUSE_R && !MyCustomKeyboard.MOUSE_L)
-            {
-                Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-                if(Physics.Raycast(ray, out RaycastHit hitInfo, rangePick, itemMask, QueryTriggerInteraction.Ignore))
-                {
-                    spectatorCameraFacade.ConstructRestoreObject(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
-                    Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
-                    Destroy(hitInfo.collider.gameObject);
-                }        
-            }
-
-            if(MyCustomKeyboard.MOUSE_L && !MyCustomKeyboard.MOUSE_R)
-            {
-                Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-                if(Physics.Raycast(ray, out RaycastHit hitInfo, rangePick, itemMask, QueryTriggerInteraction.Ignore))
-                {
-                    GameObject worldPoint = hitInfo.collider.gameObject;
-                    if(worldPoint.CompareTag("Object"))
-                    {
-                        float threshold = 0.5f;
-
-                        // Check the direction of the surface normal to determine the hit surface
-                        if (Vector3.Dot(hitInfo.normal, Vector3.up) > threshold) {
-                            spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.UP;
-                            Debug.Log("Hit top surface");
-                        }
-                        else if (Vector3.Dot(hitInfo.normal, Vector3.down) > threshold) {
-                            spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.DOWN;
-                            Debug.Log("Hit bottom surface");
-                        }
-                        else if (Vector3.Dot(hitInfo.normal, Vector3.left) > threshold) {
-                            spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.LEFT;
-                            Debug.Log("Hit left surface");
-                        }
-                        else if (Vector3.Dot(hitInfo.normal, Vector3.right) > threshold) {
-                            spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.RIGHT;
-                            Debug.Log("Hit right surface");
-                        }
-                        else if (Vector3.Dot(hitInfo.normal, Vector3.forward) > threshold) {
-                            spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.FORWARD;
-                            Debug.Log("Hit front surface");
-                        }
-                        else if (Vector3.Dot(hitInfo.normal, Vector3.back) > threshold) {
-                            spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.BACKWARD;
-                            Debug.Log("Hit back surface");
-                        }
-                    }
-                    hitInfo.transform.rotation *= spectatorCameraFacade.ConstructRotateObject();
-                    Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
-                }   
-            }
+            worldPoint.GetComponent<Rigidbody>().isKinematic = false;
+            worldPoint = null;
         }
+        
+        if(MyCustomKeyboard.MOUSE_R)
+        {
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            if(Physics.Raycast(ray, out RaycastHit hitInfo, rangePick, itemMask, QueryTriggerInteraction.Ignore))
+            {
+                spectatorCameraFacade.ConstructRestoreObject(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
+                Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().name);
+                Destroy(hitInfo.collider.gameObject);
+            }        
+        }
+        isRotate = MyCustomKeyboard.MOUSE_L;
+        if(MyCustomKeyboard.MOUSE_L && !isDrag)
+        {
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+            if(Physics.Raycast(ray, out RaycastHit hitInfo, rangePick, itemMask, QueryTriggerInteraction.Ignore))
+            {
+                worldPoint = hitInfo.collider.gameObject;
+                isRotate = true;
+                if(worldPoint.CompareTag("Object"))
+                {
+                    float threshold = 0.5f;
 
+                    // Check the direction of the surface normal to determine the hit surface
+                    if (Vector3.Dot(hitInfo.normal, Vector3.up) > threshold) {
+                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.UP;
+                        Debug.Log("Hit top surface");
+                    }
+                    else if (Vector3.Dot(hitInfo.normal, Vector3.down) > threshold) {
+                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.DOWN;
+                        Debug.Log("Hit bottom surface");
+                    }
+                    else if (Vector3.Dot(hitInfo.normal, Vector3.left) > threshold) {
+                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.LEFT;
+                        Debug.Log("Hit left surface");
+                    }
+                    else if (Vector3.Dot(hitInfo.normal, Vector3.right) > threshold) {
+                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.RIGHT;
+                        Debug.Log("Hit right surface");
+                    }
+                    else if (Vector3.Dot(hitInfo.normal, Vector3.forward) > threshold) {
+                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.FORWARD;
+                        Debug.Log("Hit front surface");
+                    }
+                    else if (Vector3.Dot(hitInfo.normal, Vector3.back) > threshold) {
+                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.BACKWARD;
+                        Debug.Log("Hit back surface");
+                    }
+                    worldPoint.GetComponent<Rigidbody>().isKinematic = true;
+                    worldPoint.transform.rotation *= spectatorCameraFacade.ConstructRotateObject();
+                    Debug.Log(worldPoint.GetComponent<PropInfo>().name);
+                }
+            }   
+        }
+    }
 
+    void Movement()
+    {
         if(MyCustomKeyboard.KEY_W)
         {
             spectatorCameraProperties.spectatorCameraMovementProperties.direction = DirectionMovement.FORWARD;
