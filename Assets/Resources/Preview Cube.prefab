@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 7916587732215862314}
   - component: {fileID: 8503691401905266533}
   - component: {fileID: 3470326083362248936}
-  - component: {fileID: -4373667303339561212}
+  - component: {fileID: -7316311900293064064}
   m_Layer: 6
-  m_Name: Red Cube
+  m_Name: Preview Cube
   m_TagString: Object
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -64,7 +64,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 437b99cb34a979c4ab7f2b1cb8b505e8, type: 2}
+  - {fileID: 2100000, guid: 67561d24a87eb644bb7688c584c0c7ca, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -101,11 +101,11 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.9, y: 0.9, z: 0.9}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &3470326083362248936
 Rigidbody:
@@ -130,11 +130,11 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 1
---- !u!114 &-4373667303339561212
+  m_CollisionDetection: 0
+--- !u!114 &-7316311900293064064
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -143,6 +143,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 3741675203770700801}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e86fcf2fe9192645963a011ecc03c99, type: 3}
+  m_Script: {fileID: 11500000, guid: b0f9bd2395c8d914fbe872a0cc0afa9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isTrigger: 0
+  materials:
+  - {fileID: 2100000, guid: f0041b2af27e47d4db22c7b47ce91cd8, type: 2}
+  - {fileID: 2100000, guid: 8fe080fe4e6f1b7458e566d51b042a34, type: 2}

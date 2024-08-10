@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BackgroundMusic : MonoBehaviour
 {
-    public static BackgroundMusic Instance;
+
     [SerializeField] AudioClip[] audioClips;
     AudioSource source;
 
@@ -16,12 +16,6 @@ public class BackgroundMusic : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if(Instance)
-            Destroy(gameObject);
-        else
-            Instance = this;
-
-        DontDestroyOnLoad(gameObject);
         Application.runInBackground = false;
         source.PlayOneShot(audioClips[index]);
     }

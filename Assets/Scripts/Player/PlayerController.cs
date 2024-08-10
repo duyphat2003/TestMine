@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DG.Tweening;
 using MyLibrary.Model;
 using MyLibrary.PlayerFacade;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -30,6 +33,83 @@ public class PlayerController : MonoBehaviour
         menu.SetActive(false);
     }
 
+    public void ResetFile()
+    {
+         // Kiểm tra xem thư mục có tồn tại không
+        if (Directory.Exists(Application.persistentDataPath + "/Prop"))
+        {
+            // Lấy tất cả các file trong thư mục
+            string[] files = Directory.GetFiles(Application.persistentDataPath + "/Prop");
+
+            // Xóa từng file
+            foreach (string file in files)
+            {
+                // Xóa thuộc tính chỉ đọc (Read-Only) nếu có
+                FileAttributes attributes = File.GetAttributes(file);
+                if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                {
+                    File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+                }
+
+                // Xóa file
+                File.Delete(file);
+            }
+
+            Debug.Log("All files deleted successfully.");
+        }
+         // Kiểm tra xem thư mục có tồn tại không
+        if (Directory.Exists(Application.persistentDataPath + "/Inventory"))
+        {
+            // Lấy tất cả các file trong thư mục
+            string[] files = Directory.GetFiles(Application.persistentDataPath + "/Inventory");
+
+            // Xóa từng file
+            foreach (string file in files)
+            {
+                // Xóa thuộc tính chỉ đọc (Read-Only) nếu có
+                FileAttributes attributes = File.GetAttributes(file);
+                if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                {
+                    File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+                }
+
+                // Xóa file
+                File.Delete(file);
+            }
+
+            Debug.Log("All files deleted successfully.");
+        }
+         // Kiểm tra xem thư mục có tồn tại không
+        if (Directory.Exists(Application.persistentDataPath + "/Player"))
+        {
+            // Lấy tất cả các file trong thư mục
+            string[] files = Directory.GetFiles(Application.persistentDataPath + "/Player");
+
+            // Xóa từng file
+            foreach (string file in files)
+            {
+                // Xóa thuộc tính chỉ đọc (Read-Only) nếu có
+                FileAttributes attributes = File.GetAttributes(file);
+                if ((attributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                {
+                    File.SetAttributes(file, attributes & ~FileAttributes.ReadOnly);
+                }
+
+                // Xóa file
+                File.Delete(file);
+            }
+            playerPref_DatabaseManager.props = new List<Prop>();
+            playerPref_DatabaseManager.inventory = new List<Inventory>();
+            playerPref_DatabaseManager.player = new Player();
+            Debug.Log("All files deleted successfully.");
+        }
+                // Lấy tên scene hiện tại
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        
+        // Load lại scene hiện tại
+        SceneManager.LoadScene(currentSceneName);
+    }
+
     public void ExitGame()
     {
         WaitingForSaving();
@@ -39,20 +119,16 @@ public class PlayerController : MonoBehaviour
 
     void WaitingForSaving()
     {
-        Debug.Log("Reset Data");
-        
-        Debug.Log("Done Reset Data");
-
         Debug.Log("Saving Inventory");
-        PlayerPref_DatabaseManager.Instance.SaveInventory();
+        playerPref_DatabaseManager.SaveInventory();
         Debug.Log("Done Inventory");
 
         Debug.Log("Saving Player");
-        PlayerPref_DatabaseManager.Instance.SavePlayer();
+        playerPref_DatabaseManager.SavePlayer();
         Debug.Log("Done Player");
 
         Debug.Log("Saving Prop");
-        PlayerPref_DatabaseManager.Instance.SaveProp();
+        playerPref_DatabaseManager.SaveProp();
         Debug.Log("Done Prop");
     }
 
@@ -63,10 +139,11 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        if(PlayerPref_DatabaseManager.Instance.hasDataPlayer)
+        playerPref_DatabaseManager = FindObjectOfType<PlayerPref_DatabaseManager>();
+        if(playerPref_DatabaseManager.hasDataPlayer)
         {
-            transform.SetPositionAndRotation(new Vector3(PlayerPref_DatabaseManager.Instance.player.x, PlayerPref_DatabaseManager.Instance.player.y, PlayerPref_DatabaseManager.Instance.player.z), 
-                                Quaternion.Euler(PlayerPref_DatabaseManager.Instance.player.a, PlayerPref_DatabaseManager.Instance.player.b, PlayerPref_DatabaseManager.Instance.player.c));
+            transform.SetPositionAndRotation(new Vector3(playerPref_DatabaseManager.player.x, playerPref_DatabaseManager.player.y, playerPref_DatabaseManager.player.z), 
+                                Quaternion.Euler(playerPref_DatabaseManager.player.a, playerPref_DatabaseManager.player.b, playerPref_DatabaseManager.player.c));
         }
 
         Cursor.lockState = isEdit ? CursorLockMode.None : CursorLockMode.Locked;
@@ -93,12 +170,12 @@ public class PlayerController : MonoBehaviour
 
     void UpdatePosition()
     {
-        PlayerPref_DatabaseManager.Instance.player.x = transform.position.x;
-        PlayerPref_DatabaseManager.Instance.player.y = transform.position.y;
-        PlayerPref_DatabaseManager.Instance.player.z = transform.position.z;
-        PlayerPref_DatabaseManager.Instance.player.a = transform.rotation.x;
-        PlayerPref_DatabaseManager.Instance.player.b = transform.rotation.y;
-        PlayerPref_DatabaseManager.Instance.player.c = transform.rotation.z;
+        playerPref_DatabaseManager.player.x = transform.position.x;
+        playerPref_DatabaseManager.player.y = transform.position.y;
+        playerPref_DatabaseManager.player.z = transform.position.z;
+        playerPref_DatabaseManager.player.a = transform.rotation.x;
+        playerPref_DatabaseManager.player.b = transform.rotation.y;
+        playerPref_DatabaseManager.player.c = transform.rotation.z;
     }
 
     void SetEdit()
@@ -121,6 +198,7 @@ public class PlayerController : MonoBehaviour
     }
     [SerializeField] AudioSource removeSource;
     [SerializeField] GameObject vfxPrefab;
+    [SerializeField] PlayerPref_DatabaseManager playerPref_DatabaseManager;
     GameObject worldPoint;
     bool isRotate;
     void IntertactObject()
@@ -141,55 +219,18 @@ public class PlayerController : MonoBehaviour
             {
                 spectatorCameraFacade.ConstructRestoreObject(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.name);
                 Debug.Log(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.name);
-                PlayerPref_DatabaseManager.Instance.props.Remove(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop);
-                PlayerPref_DatabaseManager.Instance.DeleteProp(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.index);
                 removeSource.Play();
                 Instantiate(vfxPrefab, hitInfo.collider.gameObject.transform.position, Quaternion.identity);
-                Destroy(hitInfo.collider.gameObject);
-            }        
-        }
-        isRotate = MyCustomKeyboard.MOUSE_L;
-        if(MyCustomKeyboard.MOUSE_L && !isDrag)
-        {
-            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-            if(Physics.Raycast(ray, out RaycastHit hitInfo, rangePick, itemMask, QueryTriggerInteraction.Ignore))
-            {
-                worldPoint = hitInfo.collider.gameObject;
-                isRotate = true;
-                if(worldPoint.CompareTag("Object"))
+                hitInfo.collider.gameObject.GetComponent<BoxCollider>().enabled = false;
+                hitInfo.collider.gameObject.transform.DOScale(Vector3.zero, 1).SetEase(Ease.InOutQuad).OnComplete(() =>
                 {
-                    float threshold = 0.5f;
-
-                    // Check the direction of the surface normal to determine the hit surface
-                    if (Vector3.Dot(hitInfo.normal, Vector3.up) > threshold) {
-                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.UP;
-                        Debug.Log("Hit top surface");
-                    }
-                    else if (Vector3.Dot(hitInfo.normal, Vector3.down) > threshold) {
-                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.DOWN;
-                        Debug.Log("Hit bottom surface");
-                    }
-                    else if (Vector3.Dot(hitInfo.normal, Vector3.left) > threshold) {
-                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.LEFT;
-                        Debug.Log("Hit left surface");
-                    }
-                    else if (Vector3.Dot(hitInfo.normal, Vector3.right) > threshold) {
-                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.RIGHT;
-                        Debug.Log("Hit right surface");
-                    }
-                    else if (Vector3.Dot(hitInfo.normal, Vector3.forward) > threshold) {
-                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.FORWARD;
-                        Debug.Log("Hit front surface");
-                    }
-                    else if (Vector3.Dot(hitInfo.normal, Vector3.back) > threshold) {
-                        spectatorCameraProperties.spectatorCameraRotateObjectProperties.rotateDirection = RotateDirection.BACKWARD;
-                        Debug.Log("Hit back surface");
-                    }
-                    worldPoint.GetComponent<Rigidbody>().isKinematic = true;
-                    worldPoint.transform.rotation *= spectatorCameraFacade.ConstructRotateObject();
-                    Debug.Log(worldPoint.GetComponent<PropInfo>().name);
-                }
-            }   
+                    playerPref_DatabaseManager.props.Remove(playerPref_DatabaseManager.props.FirstOrDefault(x => x.index == hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.index));
+                    playerPref_DatabaseManager.DeleteProp(hitInfo.collider.gameObject.GetComponent<PropInfo>().prop.index);
+                    Destroy(hitInfo.collider.gameObject);
+                });
+                
+                
+            }        
         }
     }
 

@@ -7,18 +7,11 @@ using System.Collections.Generic;
 
 public class PlayerPref_DatabaseManager : MonoBehaviour
 {
-    public static PlayerPref_DatabaseManager Instance;
     PlayerRef_CommandManager playerRef_CommandManager;
     [SerializeField] GameObject playerPrefab;    
     void Start()
     {
-        if(Instance)
-            Destroy(gameObject);
-        else
-            Instance = this;
-
         playerRef_CommandManager = new PlayerRef_CommandManager();
-        DontDestroyOnLoad(gameObject);
 
         props = new List<Prop>();
         inventory = new List<Inventory>();
@@ -199,12 +192,4 @@ public class PlayerPref_DatabaseManager : MonoBehaviour
             hasDataPlayer = false;
         }
     }
-
-
-    public void ResetContent()
-    {
-        playerRef_CommandManager.UndoLastCommand();
-    }
-
-
 }
